@@ -4,8 +4,8 @@
   "title": "[PILL PACK] Ignited Bonnie",
   "author": "Nick Vogel",
   "status": "extracted_verified",
-  "acquisition": "existing_steam_client_installation",
-  "steamcmd_download_completed": false,
+  "acquisition": "steamcmd",
+  "steamcmd_download_completed": true,
   "source_workshop_url": "https://steamcommunity.com/sharedfiles/filedetails/?id=3737191580",
   "source_archive_sha256": "03bfd74c6b196ba233eaf154c1749846945d9484f01a6eba7731efa6093e13bf",
   "gma_header": {
