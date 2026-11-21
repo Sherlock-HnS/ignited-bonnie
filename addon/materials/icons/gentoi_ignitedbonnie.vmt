@@ -1,0 +1,9 @@
+"UnlitGeneric"
+{
+    "$basetexture" "icons/gentoi_ignitedbonnie"
+    "$translucent" "1"
+    "$additive" "1"
+    "$selfillum" "1"
+    "$vertexcolor" "1"
+    "$vertexalpha" "1"
+}

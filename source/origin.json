@@ -1,0 +1,21 @@
+{
+  "id": "3737191580",
+  "name": "ignited-bonnie",
+  "title": "[PILL PACK] Ignited Bonnie",
+  "author": "Nick Vogel",
+  "status": "extracted_verified",
+  "acquisition": "existing_steam_client_installation",
+  "steamcmd_download_completed": false,
+  "source_workshop_url": "https://steamcommunity.com/sharedfiles/filedetails/?id=3737191580",
+  "source_archive_sha256": "03bfd74c6b196ba233eaf154c1749846945d9484f01a6eba7731efa6093e13bf",
+  "gma_header": {
+    "title": "[PILL PACK] Ignited Bonnie",
+    "description": "{\"title\":\"[PILL PACK] Ignited Bonnie\",\"type\":\"npc\",\"tags\":[\"realism\",\"roleplay\",\"fun\"],\"ignore\":[\"ogg\"]}",
+    "author": "Author Name",
+    "steam_id": "0",
+    "timestamp": 1787350794
+  },
+  "files": 27,
+  "payload_bytes": 34350529,
+  "roundtrip_verified": true
+}

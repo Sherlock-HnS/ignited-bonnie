@@ -1,0 +1,17 @@
+"VertexlitGeneric"
+{
+    "$basetexture" "models/gentoi/anologhorror/ignitedbonnie/MI_Ignited_Bonnie_Endo_d"
+    "$bumpmap"     "models/gentoi/anologhorror/ignitedbonnie/MI_Ignited_Bonnie_Endo_n"
+    
+    "$color2" "[1 1 1]"
+
+    "$phong" "1"
+    "$phongboost"    "7"
+    "$phongexponent" "20"
+    "$phongfresnelranges"    "[1 0.23 0.4]"
+    "$phongdisablehalflambert"    "1"
+    "$phongtint" "[0.4 0.4 0.4]"
+
+    "$selfillum" "0"
+    "$nocull" "1"
+}

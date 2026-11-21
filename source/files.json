@@ -1,0 +1,164 @@
+[
+  {
+    "path": "lua/autorun/ignitedones_jentoi_int.lua",
+    "size": 12712,
+    "crc": 457981718,
+    "sha256": "db3cdfe49f14a089d127835a12d34c76121c24644eb865b9543b540713f9becd"
+  },
+  {
+    "path": "materials/icons/gentoi_ignitedbonnie.vmt",
+    "size": 184,
+    "crc": 3398525555,
+    "sha256": "0699da3bbe9f0620fd2731dc75d6509f246f82c831ddcfcda63dcd13c8450f2a"
+  },
+  {
+    "path": "lua/autorun/include/ignitedones_jentoi_pill.lua",
+    "size": 45462,
+    "crc": 2907375251,
+    "sha256": "62bcff95124665f1a8012e39b3926ecb32acb1486095116c3f39cfd7d551103e"
+  },
+  {
+    "path": "materials/models/gentoi/anologhorror/ignitedbonnie/mi_ignited_bonnie_suit.vmt",
+    "size": 467,
+    "crc": 4106173815,
+    "sha256": "0a56d4c543e4ee2d84ebdda18cdd4af8c0cf5f3dacc778639627a7cac20095ae"
+  },
+  {
+    "path": "materials/models/gentoi/anologhorror/ignitedbonnie/mi_ignited_bonnie_endo.vmt",
+    "size": 465,
+    "crc": 3006979215,
+    "sha256": "f3da726631afd4676fdb502a8ff82896e539f3fe51de3f6c665d3fe84c8168e8"
+  },
+  {
+    "path": "materials/icons/fasterboost_gent_ignited.png",
+    "size": 71403,
+    "crc": 2507855015,
+    "sha256": "b048a5e0beb3ec7ecf743e5b503bea57dfd8d551f5b8a97ab6ddca9ab2199cda"
+  },
+  {
+    "path": "materials/models/gentoi/anologhorror/ignitedbonnie/mi_ignited_wires.vmt",
+    "size": 438,
+    "crc": 2494635758,
+    "sha256": "8b6373658e269c7a6cf8a280aca585b4ba9f5d51b515e2529cadeae36bb4918b"
+  },
+  {
+    "path": "materials/models/gentoi/anologhorror/ignitedbonnie/mm_lit_inst1.vmt",
+    "size": 247,
+    "crc": 2860204490,
+    "sha256": "d0b47cd0e3bd5afe938e4bf4694ef8aef26ec9cdf3b86096b523a63df7fb40d0"
+  },
+  {
+    "path": "materials/icons/gentoi_ignitedbonnie.vtf",
+    "size": 699288,
+    "crc": 3671513398,
+    "sha256": "d87b56a9d52c3b1337c3f56b30750f3c98fd4e20baec81c84e7974cdcef9cb1e"
+  },
+  {
+    "path": "materials/models/gentoi/anologhorror/ignitedbonnie/redglow3.vtf",
+    "size": 1616,
+    "crc": 4024975173,
+    "sha256": "19af1e005743e06b7208fae7158f08554ffeb44d27f77a5955e1b81fd123ef50"
+  },
+  {
+    "path": "materials/pills/pill_gentoi_ignitedbonnie.png",
+    "size": 881300,
+    "crc": 556443168,
+    "sha256": "73d15d19ba43ae1d354a731722a712f50f02326dac7ab654c9455664d3f4a4a1"
+  },
+  {
+    "path": "models/gentoi/anologhorror/ignitedbonnie.dx90.vtx",
+    "size": 935007,
+    "crc": 171416617,
+    "sha256": "d3cf8beb18057d2f679e642bbe6f538f1b7c6b99fba515d06b07b4a01f1a7028"
+  },
+  {
+    "path": "materials/models/gentoi/anologhorror/ignitedbonnie/mi_ignited_bonnie_endo_n.vtf",
+    "size": 2796440,
+    "crc": 697201828,
+    "sha256": "27d63d56b0cfa45ccba3e092a697fc73eac41459741036fa1c345221115314de"
+  },
+  {
+    "path": "materials/models/gentoi/anologhorror/ignitedbonnie/mi_ignited_bonnie_suit_n.vtf",
+    "size": 2796440,
+    "crc": 1198220013,
+    "sha256": "63ca97d429f7de9c7f76fa9f7d122ee9304c4948a6baa3ae26cfe613eaa6221c"
+  },
+  {
+    "path": "materials/models/gentoi/anologhorror/ignitedbonnie/t_wires_n.vtf",
+    "size": 2796440,
+    "crc": 3087933544,
+    "sha256": "439af2cd6ff9413cb5f64762ddd4aec16576c635b24ee63889d19dca1bcd83fe"
+  },
+  {
+    "path": "sound/gentoi/anologhorror/ignitedones/bonniekill1.wav",
+    "size": 397390,
+    "crc": 3930974096,
+    "sha256": "e8ad74af2db280dca9c57722e3e95152b6538c3e538ffd040a84212ac74aeb6e"
+  },
+  {
+    "path": "sound/gentoi/anologhorror/ignitedones/bonniekill2.wav",
+    "size": 733262,
+    "crc": 1721533435,
+    "sha256": "fbfae170c0c689bffa968221352dadac0a44c391bb60d93f2039ccd08ce610bd"
+  },
+  {
+    "path": "models/gentoi/anologhorror/ignitedbonnie.phy",
+    "size": 15940,
+    "crc": 1413656203,
+    "sha256": "ee4a9251656f43563b00a06a1aa8c388bc21c300f4aa3a79f6f7247ad7da9288"
+  },
+  {
+    "path": "models/gentoi/anologhorror/ignitedbonnie.mdl",
+    "size": 203556,
+    "crc": 1954375898,
+    "sha256": "3c67139297514507d07bd2ce1d97eb446c806b2ad98ba49b8afa9c3f523da547"
+  },
+  {
+    "path": "sound/gentoi/anologhorror/ignitedones/glitchout.wav",
+    "size": 507982,
+    "crc": 2234387480,
+    "sha256": "802e67728dd677c6807e8c0994501fbf6a0d870ac277239f7ee123e2d3b627dc"
+  },
+  {
+    "path": "sound/gentoi/anologhorror/ignitedones/step_1.wav",
+    "size": 450638,
+    "crc": 2121393078,
+    "sha256": "8c9155271d6564b012d0baf56c40dce7c2b3f8103eb2023169cb7454c0181a16"
+  },
+  {
+    "path": "sound/gentoi/anologhorror/ignitedones/step_2.wav",
+    "size": 450638,
+    "crc": 2158687476,
+    "sha256": "823f86014b42b8d277b1d3f5995ec9cfeb68978a045e6e9cd161b9748e353f95"
+  },
+  {
+    "path": "sound/gentoi/anologhorror/ignitedones/step_3.wav",
+    "size": 450638,
+    "crc": 354379631,
+    "sha256": "c13f03556ddef8f98858ed271b20f5d9a3eecfd43d868b5485c6fdddde23827c"
+  },
+  {
+    "path": "materials/models/gentoi/anologhorror/ignitedbonnie/mi_ignited_bonnie_suit_d.vtf",
+    "size": 5592656,
+    "crc": 947808436,
+    "sha256": "707401ea64113d8d4577261d0af64edf654ac49bc395713c711972d26d00c882"
+  },
+  {
+    "path": "models/gentoi/anologhorror/ignitedbonnie.vvd",
+    "size": 3324608,
+    "crc": 1277856221,
+    "sha256": "761f261d8f2888ff73ed056ffcc34693c3000983aca5aee1117dbbafb5589e36"
+  },
+  {
+    "path": "materials/models/gentoi/anologhorror/ignitedbonnie/mi_ignited_bonnie_endo_d.vtf",
+    "size": 5592656,
+    "crc": 3088181608,
+    "sha256": "bb5546ba422ab4d68142de594f0c813cd78e44d5d4e12ccba6ab96b9ff06cc13"
+  },
+  {
+    "path": "materials/models/gentoi/anologhorror/ignitedbonnie/t_ignited_wires_t.vtf",
+    "size": 5592656,
+    "crc": 3596669643,
+    "sha256": "5f0c22186fef123b2220d33e55c1e3ccc36f834070690323c9b08c1d048bfdf1"
+  }
+]

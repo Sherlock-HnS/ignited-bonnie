@@ -1,0 +1,8 @@
+"VertexlitGeneric"
+{
+    "$basetexture" "models/gentoi/anologhorror/ignitedbonnie/redglow3"
+    "$detail " "models/gentoi/anologhorror/ignitedbonnie/redglow3"
+    "$detailscale" "1"
+    "$detailblendfactor" "20"
+    "$detailblendmode" "5"
+}
