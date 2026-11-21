@@ -1,12 +1,9 @@
 {
-  "ignore": [
-    "ogg"
-  ],
+  "title": "[PILL PACK] Ignited Bonnie",
+  "type": "npc",
   "tags": [
     "realism",
-    "roleplay",
-    "fun"
+    "roleplay"
   ],
-  "title": "[PILL PACK] Ignited Bonnie",
-  "type": "npc"
+  "ignore": []
 }
