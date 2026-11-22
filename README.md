@@ -1,4 +1,4 @@
-[PILL PACK] Ignited Bonnie
+# [PILL PACK] Ignited Bonnie
 
 ![Workshop preview](workshop-preview.jpg)
 
