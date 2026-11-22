@@ -1,4 +1,3 @@
-
 hook.Add("OnEntityCreated", "ignitedones_gentoi_iniatlize", function(ent)
     timer.Simple(0.01, function()
         if !IsValid(ent) then return end
@@ -32,14 +31,12 @@ hook.Add("OnEntityCreated", "ignitedones_gentoi_iniatlize", function(ent)
                             self.animStart = nil
                         end
 
+                        -- Velocidade: sempre a do Parakeet's (formTable.moveSpeed / jumpPower).
                         if self.animFreeze and not self.plyFrozen then
-                            ply:SetWalkSpeed(ply:GetWalkSpeed() / 2)
-                            ply:SetRunSpeed(ply:GetWalkSpeed() / 2)
+                            self:ApplyMoveSpeed()
                             self.plyFrozen = true
                         elseif not self.animFreeze and self.plyFrozen then
-                            local speed = self.formTable.moveSpeed or {}
-                            ply:SetWalkSpeed(speed.walk or 200)
-                            ply:SetRunSpeed(speed.run or speed.walk or 500)
+                            self:ApplyMoveSpeed()
                             self.plyFrozen = nil
                         end
 
@@ -415,6 +412,7 @@ end)
 hook.Add("Think", "ignitedones_gentoi_think", function()
     for _, ent in ipairs(ents.FindByClass("pill_ent_costume")) do
         if !IsValid(ent) then continue end
+        if not ent.formTable then continue end
         local ply = ent:GetPillUser()
         local puppet = ent:GetPuppet()
 
@@ -455,61 +453,10 @@ else
         end
     end)
 
-    surface.CreateFont("CreditsText_Large_ignitedbonnie", {
-        font = "Arial",
-        size = 70,
-        weight = 700,
-        antialias = true,
-    })
+    -- A HUD da pill (icone do Rushdown + cooldown) foi removida:
+    -- agora quem desenha e a HUD de habilidades do gamemode (SherlockHNS.HUD).
 
-    local preservedmats = {
-        ["BowTie"] = Material("icons/fasterboost_gent_ignited.png"),
-    }
-    
-    hook.Add("HUDPaint", "gentoi_ignitedbonnie_hud", function()
-        local ply = LocalPlayer()
-        if not IsValid(ply) then return end
-
-        local pillentity = ply.pk_pill_ent
-        if not IsValid(pillentity) then return end
-        if not pillentity.GetPuppet then return end
-        if not IsValid(pillentity:GetPuppet()) then return end
-        if not pillentity.formTable.ignitedCharacter_gent then return end
-
-        local screenW, screenH = ScrW(), ScrH()
-        local iconize = ScreenScale(70)
-
-        local lx, ly = screenW/2 + screenW/3, screenH - ScreenScale(80)
-
-        if pillentity:GetNWBool("GentoiPills_ignitedbonnie_Rushdown") then
-            surface.SetDrawColor(255,255,255,255)
-        else
-            surface.SetDrawColor(255,0,0,255)
-        end
-        surface.SetMaterial(preservedmats["BowTie"])
-        surface.DrawTexturedRectRotated(lx + iconize/2,ly + iconize/2,iconize,iconize,0)
-
-        if pillentity:GetNWFloat("BonnieRushdown_Gentoi_cooldown") > CurTime() then
-            local frac = math.Clamp(
-                (pillentity:GetNWFloat("BonnieRushdown_Gentoi_cooldown") - CurTime()) /
-                pillentity:GetNWFloat("BonnieRushdown_Gentoi_cooldown_max"),
-                0, 1
-            )
-
-            local h  = Lerp(frac, 0, iconize)
-            local y2 = Lerp(frac, ly + iconize, ly)
-            local uv = Lerp(frac, 1, 0)
-
-            surface.SetDrawColor(25,25,25,255)
-            surface.DrawTexturedRectUV(lx,y2,iconize,h,0,uv,1,1)
-
-            local number = math.ceil(pillentity:GetNWFloat("BonnieRushdown_Gentoi_cooldown") - CurTime())
-            draw.SimpleTextOutlined(number,"CreditsText_Large_ignitedbonnie",lx +iconize/2,ly +iconize/2,color_white,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER,6,color_black)
-        end
-
-        draw.SimpleTextOutlined("R","CreditsText_Large_ignitedbonnie",lx + ScreenScale(5),ly + ScreenScale(2),color_white,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER,6,color_black)
-    end)
-
+    -- Camera do jumpscare: aberta/fechada pelo pk_pills.playHNSJumpscare.
     net.Receive('ignited_jumpscare_gen', function()
         local ent = net.ReadEntity()
         local state = net.ReadBool()
@@ -517,10 +464,13 @@ else
 
         local hookID = "ignited_jumpscare_" .. LocalPlayer():SteamID()
 
-        --print(state)
-
         if not state then
             hook.Remove('CalcView', hookID)
+
+            local lp = LocalPlayer()
+            if IsValid(lp) then
+                lp:DrawViewModel(true)
+            end
         else
             hook.Add('CalcView', hookID, function(ply, pos, angles, fov)
                 if not IsValid(ply) or not ply:Alive() or !IsValid(ent) then
@@ -593,194 +543,185 @@ local function AdvancedPillSound(SoundData, ent)
     return true
 end
 
+-- ---------------------------------------------------------------------
+-- Jumpscare (Kill API)
+-- O gamemode cuida de travas, alvo valido, cancelamento e morte
+-- (SherlockHNS.KillWithDelay via pk_pills.playHNSJumpscare).
+-- Aqui ficam so o alvo mais proximo e o visual do ragdoll falso.
+-- ---------------------------------------------------------------------
+local JUMPSCARE_RADIUS = 90
 
-local function racheljackietien_jumpscare(ply, ent, duration, customanimstuff)
-    if not ent.IsInJumpscare then ent.IsInJumpscare = 0 end
-    if ent.IsInJumpscare >= CurTime() then return end
-    if not ent.IsInJumpscareCooldown then ent.IsInJumpscareCooldown = 0 end
-    if ent.IsInJumpscareCooldown >= CurTime() then return end
-
-    local jumpscare_entity = nil
-
-    for _, ent2 in pairs(ents.FindInSphere(ent:LocalToWorld(Vector(0, 0, 50)), 90)) do
-        if (ent2:IsPlayer() or ent2:IsNextBot() or ent2:IsNPC()) and ent2:Health() >= 0.1 then
-            if ent2 == ply then continue end
-            if ent2:IsPlayer() and ent2:Team() == TEAM_SPECTATOR then continue end
-
-            if IsValid(ent2) then
-                jumpscare_entity = ent2
-                break
-            end
-        end
-    end
-
-    if jumpscare_entity ~= nil then
-        
-        ent.JuumpscareStart = CurTime()
-
-        ent.jumpscare_entity = jumpscare_entity
-        ent.entitylastpos = jumpscare_entity:GetPos()
-        ent.entitylastang = jumpscare_entity:GetAngles()
-
-        local targetAngle = (ply:GetPos() - jumpscare_entity:GetPos()):Angle()
-
-        targetAngle.p = 0
-        targetAngle.r = 0
-
-        ply:SetNWInt("DisableMovement_jumpscare_pill_ignited", duration+CurTime())
-        jumpscare_entity:SetNWInt("DisableMovement_jumpscare_pill_ignited", duration+CurTime())
-
-        ent.IsInJumpscare = CurTime() + duration
-
-        local puppet = ent:GetPuppet()
-
-        if jumpscare_entity:IsPlayer() then
-            net.Start('ignited_jumpscare_gen')
-            net.WriteEntity(puppet)
-            net.WriteBool(true)
-            net.Send(jumpscare_entity)
-        else
-            jumpscare_entity:NextThink(duration+0.1+CurTime())
-        end
-        
-        jumpscare_entity:AddFlags(FL_NOTARGET)
-
-        ent:CallOnRemove("RachelJumpscare"..ent:EntIndex(), function()
-            if !IsValid(jumpscare_entity) then return end
-
-            jumpscare_entity:RemoveFlags(FL_NOTARGET)
-            ent.jumpscare_entity = nil
-
-            if jumpscare_entity:IsPlayer() then
-                net.Start('ignited_jumpscare_gen')
-                net.WriteEntity(puppet)
-                net.WriteBool(false)
-                net.Send(jumpscare_entity)
-            else
-                jumpscare_entity:NextThink(CurTime())
-            end
-            jumpscare_entity:SetPos(ent.entitylastpos)
-            jumpscare_entity:SetAngles(ent.entitylastang)
-            jumpscare_entity:SetNWInt("DisableMovement_jumpscare_pill_ignited", CurTime())
-        end)
-
-
-            if !IsValid(ent) then return end
-            local jumpscare_entity = ent.jumpscare_entity
-            if !(IsValid(jumpscare_entity)) then return end
-
-            local ragdoll = ents.Create("prop_ragdoll")
-            ragdoll:SetModel(jumpscare_entity:GetModel())
-            ragdoll:SetPos(jumpscare_entity:GetPos())
-            ragdoll:SetAngles(jumpscare_entity:GetAngles())
-            ragdoll:SetSkin(jumpscare_entity:GetSkin() or 0)
-            ragdoll:SetCollisionGroup(COLLISION_GROUP_WEAPON)
-            ragdoll:Spawn()
-
-            ragdoll:SetNWFloat("IgnitedCharacters_NoDraw", duration+CurTime())
-            ragdoll:SetNWEntity("IgnitedCharacters_nodrawply", jumpscare_entity)
-
-            local physCount = ragdoll:GetPhysicsObjectCount()
-            if physCount <= 0 then
-                ragdoll:Remove()
-                return end
-
-            if not jumpscare_entity:IsPlayer() then
-                local wep = jumpscare_entity:GetActiveWeapon()
-                if IsValid(wep) then
-                    jumpscare_entity.OldWeapon = wep
-                    wep:SetNoDraw(true)
-                end
-            end
-
-            if jumpscare_entity.GetBodyGroups then
-                for _, bg in ipairs(jumpscare_entity:GetBodyGroups()) do
-                    ragdoll:SetBodygroup(bg.id, jumpscare_entity:GetBodygroup(bg.id))
-                end
-            end
-
-            if jumpscare_entity.GetPlayerColor and ragdoll.SetPlayerColor then
-                ragdoll:SetPlayerColor(jumpscare_entity:GetPlayerColor())
-            end
-
-            if jumpscare_entity.GetColor then
-                ragdoll:SetColor(jumpscare_entity:GetColor())
-            end
-
-            if jumpscare_entity.GetMaterial then
-                ragdoll:SetMaterial(jumpscare_entity:GetMaterial())
-            end
-
-            if ragdoll.GetNumSubMaterials and ragdoll.SetSubMaterial and jumpscare_entity.GetSubMaterial then
-                for i = 0, ragdoll:GetNumSubMaterials() - 1 do
-                    local sub = jumpscare_entity:GetSubMaterial(i)
-                    if sub then
-                        ragdoll:SetSubMaterial(i, sub)
-                    end
-                end
-            end
-
-            jumpscare_entity:SetNoDraw(true)
-            jumpscare_entity:SetNotSolid(true)
-
-            ent.CurrentJumpscareRagdoll = ragdoll
-            ent:DeleteOnRemove(ragdoll)
-
-            hook.Add("Think", "ragdoll_nosey".. ent:EntIndex(), function()
-                if !IsValid(ragdoll) then return end
-                if SERVER then
-                    local headPhys = nil
-
-                    for i = 0, ragdoll:GetPhysicsObjectCount() - 1 do
-                        local phys = ragdoll:GetPhysicsObjectNum(i)
-                        if IsValid(phys) then
-                            local boneIndex = ragdoll:TranslatePhysBoneToBone(i)
-                            local boneName = ragdoll:GetBoneName(boneIndex) or ""
-                            if string.find(string.lower(boneName), "head") then
-                                headPhys = phys
-                                break
-                            end
-                        end
-                    end
-
-                    if !IsValid(headPhys) then
-                        headPhys = ragdoll:GetPhysicsObject()
-                    end
-
-                    if IsValid(headPhys) then
-                        local cam = ent:GetPuppet():GetAttachment(ent:GetPuppet():LookupAttachment('camera'))
-                        local lerpFactor = math.Clamp((CurTime() - ent.JuumpscareStart) / 0.5, 0, 1)
-                        local NewVector = LerpVector(lerpFactor, ent.entitylastpos, cam.Pos)
-                        headPhys:SetPos(cam.Pos)
-                        headPhys:SetAngles(cam.Ang)
-
-                        headPhys:Wake()
-                    end
-                end
-            end)
-
-        customanimstuff()
-    end
+local function ConVarNumber(name, default)
+    local cv = GetConVar(name)
+    return cv and cv:GetFloat() or default
 end
 
-hook.Add("SetupMove", "DisablePlayerMovement_ignited", function(ply, mv, cmd)
-    if ply:GetNWInt("DisableMovement_jumpscare_pill_ignited") >= CurTime() then
-        mv:SetForwardSpeed(0)
-        mv:SetSideSpeed(0)
-        mv:SetUpSpeed(0)
-        mv:SetButtons(0)
-    end
-end)
+local function FindHeadPhys(ragdoll)
+    for i = 0, ragdoll:GetPhysicsObjectCount() - 1 do
+        local phys = ragdoll:GetPhysicsObjectNum(i)
 
+        if IsValid(phys) then
+            local boneName = ragdoll:GetBoneName(ragdoll:TranslatePhysBoneToBone(i)) or ""
 
-hook.Add("PlayerButtonDown", "ActivateKeybind_ignited_gentoi_pills", function(ply, button)
-    local pillentity = ply.pk_pill_ent
-    if IsValid(pillentity) then
-        if pillentity.formTable.noodles_ignited_gentoi_keybinds then
-            pillentity.formTable.noodles_ignited_gentoi_keybinds(ply, pillentity, button)
+            if string.find(string.lower(boneName), "head") then
+                return phys
+            end
         end
     end
-end)
+
+    return ragdoll:GetPhysicsObject()
+end
+
+local function FindJumpscareTarget(ply, ent)
+    local origin = ent:LocalToWorld(Vector(0, 0, 50))
+    local best, bestDist
+
+    for _, v in ipairs(ents.FindInSphere(origin, JUMPSCARE_RADIUS)) do
+        if v ~= ply and v:IsPlayer() and SherlockHNS.CanTarget(v, ply) then
+            local dist = v:GetPos():DistToSqr(origin)
+
+            if not bestDist or dist < bestDist then
+                best, bestDist = v, dist
+            end
+        end
+    end
+
+    return best
+end
+
+local function CreateVictimRagdoll(victim, duration)
+    local ragdoll = ents.Create("prop_ragdoll")
+    if not IsValid(ragdoll) then return end
+
+    ragdoll:SetModel(victim:GetModel())
+    ragdoll:SetPos(victim:GetPos())
+    ragdoll:SetAngles(victim:GetAngles())
+    ragdoll:SetSkin(victim:GetSkin() or 0)
+    ragdoll:SetCollisionGroup(COLLISION_GROUP_WEAPON)
+    ragdoll:Spawn()
+
+    if ragdoll:GetPhysicsObjectCount() <= 0 then
+        ragdoll:Remove()
+        return
+    end
+
+    -- esconde o ragdoll so para a propria vitima
+    ragdoll:SetNWFloat("IgnitedCharacters_NoDraw", duration + CurTime())
+    ragdoll:SetNWEntity("IgnitedCharacters_nodrawply", victim)
+
+    for _, bg in ipairs(victim:GetBodyGroups()) do
+        ragdoll:SetBodygroup(bg.id, victim:GetBodygroup(bg.id))
+    end
+
+    if victim.GetPlayerColor and ragdoll.SetPlayerColor then
+        ragdoll:SetPlayerColor(victim:GetPlayerColor())
+    end
+
+    ragdoll:SetColor(victim:GetColor())
+    ragdoll:SetMaterial(victim:GetMaterial())
+
+    for i = 0, ragdoll:GetNumSubMaterials() - 1 do
+        local sub = victim:GetSubMaterial(i)
+
+        if sub then
+            ragdoll:SetSubMaterial(i, sub)
+        end
+    end
+
+    return ragdoll
+end
+
+-- Chamado no onStart do jumpscare. Retorna a funcao de limpeza, que o
+-- pk_pills.playHNSJumpscare executa no fim (morte, escudo ou cancelamento).
+local function StartJumpscareVisuals(ply, ent, victim, duration)
+    local puppet = ent:GetPuppet()
+    local hookId = "ragdoll_nosey" .. ent:EntIndex()
+    local lastPos, lastAng = victim:GetPos(), victim:GetAngles()
+
+    ent.jumpscare_entity = victim
+    ent.entitylastpos = lastPos
+    ent.entitylastang = lastAng
+    ent.JuumpscareStart = CurTime()
+    ent.jumpscareEvent = nil
+
+    local ragdoll = CreateVictimRagdoll(victim, duration)
+
+    victim:SetNoDraw(true)
+    victim:SetNotSolid(true)
+
+    if IsValid(ragdoll) then
+        ent.CurrentJumpscareRagdoll = ragdoll
+        ent:DeleteOnRemove(ragdoll)
+
+        -- a cabeca do ragdoll acompanha a camera do puppet
+        hook.Add("Think", hookId, function()
+            if not IsValid(ragdoll) or not IsValid(puppet) then
+                hook.Remove("Think", hookId)
+                return
+            end
+
+            local cam = puppet:GetAttachment(puppet:LookupAttachment("camera"))
+            local headPhys = FindHeadPhys(ragdoll)
+
+            if cam and IsValid(headPhys) then
+                headPhys:SetPos(cam.Pos)
+                headPhys:SetAngles(cam.Ang)
+                headPhys:Wake()
+            end
+        end)
+    end
+
+    return function()
+        hook.Remove("Think", hookId)
+
+        local event, forward
+
+        if IsValid(ent) then
+            event = ent.jumpscareEvent
+            ent.jumpscare_entity = nil
+            ent.CurrentJumpscareRagdoll = nil
+        end
+
+        if IsValid(puppet) then
+            forward = puppet:GetForward()
+        end
+
+        if IsValid(victim) then
+            victim:SetNoDraw(false)
+            victim:SetNotSolid(false)
+            victim:SetPos(lastPos)
+            victim:SetAngles(lastAng)
+        end
+
+        if not IsValid(ragdoll) then return end
+
+        -- no proximo tick a API ja resolveu: se a vitima morreu o ragdoll
+        -- vira o corpo; se um escudo barrou, ele some
+        timer.Simple(0, function()
+            if not IsValid(ragdoll) then return end
+
+            if IsValid(victim) and not victim:Alive() then
+                if IsValid(ent) then
+                    ent:DontDeleteOnRemove(ragdoll)
+                end
+
+                local headPhys = FindHeadPhys(ragdoll)
+
+                if IsValid(headPhys) then
+                    if event == "playerded" and forward then
+                        headPhys:SetVelocity(forward * 9000000)
+                    end
+
+                    headPhys:Wake()
+                end
+
+                ragdoll:Fire("FadeAndRemove", nil, 10)
+            else
+                ragdoll:Remove()
+            end
+        end)
+    end
+end
 
 pk_pills.packStart("TheIgnitedOnes_gentoi", "AnalogHorrorPills_gentio_ignitedones", "pills/pill_gentoi_ignitedbonnie.png")
 
@@ -794,6 +735,10 @@ pk_pills.register('pill_gentoi_ignitedbonnie', {
         
     noragdoll = true,
     muteSteps = true,
+
+    -- A morte passa toda pela Kill API (pk_pills.playHNSJumpscare -> KillWithDelay).
+    -- O auditor nao enxerga o helper do pk_pills, entao o estado e declarado aqui.
+    hnsKillAPI = true,
         
     anims={
         default={
@@ -807,6 +752,7 @@ pk_pills.register('pill_gentoi_ignitedbonnie', {
         },
     },
 
+    -- Velocidade: unica fonte e o Parakeet's (moveSpeed / jumpPower).
     moveSpeed = {
         walk = 57,
         run = 450,
@@ -852,62 +798,13 @@ pk_pills.register('pill_gentoi_ignitedbonnie', {
         
     canAim=function(ply,ent) return ent.active end,    
 
+    -- Eventos de animacao do puppet. A morte nao depende mais deles;
+    -- "playerded" so avisa o visual do ragdoll que ele deve ser arremessado.
     HandleAnimEvent_g_ignitedones = function(ply, ent, event)
         if event == "playerded" or event == "playerded2" then
-            timer.Simple(0.4, function()
-                if !IsValid(ent) then return end
-
-                if ent.CurrentJumpscareRagdoll then
-                    if IsValid(ent.CurrentJumpscareRagdoll) then
-                        ent:DontDeleteOnRemove(ent.CurrentJumpscareRagdoll)
-
-                        local ragdoll = ent.CurrentJumpscareRagdoll
-                        local headPhys = nil
-
-                        for i = 0, ragdoll:GetPhysicsObjectCount() - 1 do
-                            local phys = ragdoll:GetPhysicsObjectNum(i)
-                            if IsValid(phys) then
-                                local boneIndex = ragdoll:TranslatePhysBoneToBone(i)
-                                local boneName = ragdoll:GetBoneName(boneIndex) or ""
-                                if string.find(string.lower(boneName), "head") then
-                                    headPhys = phys
-                                    break
-                                end
-                            end
-                        end
-
-                        if !IsValid(headPhys) then
-                            headPhys = ragdoll:GetPhysicsObject()
-                        end
-
-                        if IsValid(headPhys) then
-                            if event ~= "playerded2" then
-                                headPhys:SetVelocity(ent:GetPuppet():GetForward()*9000000)
-                            end
-                            headPhys:Wake()
-                        end
-                    end
-                end
-                hook.Remove('Think', "ragdoll_nosey".. ent:EntIndex())
-                
-                local jumpscare_entity = ent.jumpscare_entity
-                if !(IsValid(jumpscare_entity)) or !IsValid(ent) then return end
-                ent.jumpscare_entity = nil
-                jumpscare_entity:SetPos(ent.entitylastpos)
-                jumpscare_entity:SetAngles(ent.entitylastang)
-                if jumpscare_entity:IsPlayer() then
-                    net.Start('ignited_jumpscare_gen')
-                    net.WriteEntity(puppet)
-                    net.WriteBool(false)
-                    net.Send(jumpscare_entity)
-                    jumpscare_entity:Kill(ply)
-                else
-                    jumpscare_entity:NextThink(CurTime())
-
-                    jumpscare_entity:TakeDamage(1e9, ply)
-                end
-                ent:RemoveCallOnRemove("RachelJumpscare"..ent:EntIndex())
-            end)
+            if IsValid(ent) then
+                ent.jumpscareEvent = event
+            end
         end
         if event == "Step" then
             if IsValid(ent) then
@@ -920,41 +817,107 @@ pk_pills.register('pill_gentoi_ignitedbonnie', {
         end
     end,
 
+    -- Habilidades (Abilities API): cooldown, duracao, tecla e HUD ficam com o gamemode.
+    -- Forma de funcao para ler as convars no momento em que a pill e concedida.
+    hnsAbilities = function(ply, ent)
+        local list = {
+            {
+                id       = "jumpscare",
+                name     = "Jumpscare",
+                key      = IN_ATTACK,
+                cooldown = 0,
+                color    = Color(200, 30, 30),
+                order    = 10,
 
-    attack = {
-        mode = 'trigger',
-        func = function(ply, ent)
+                OnUse = function(ply, ent, ab)
+                    if not SherlockHNS or not IsValid(ent) then return false end
 
-            local cuddd = math.random(1,2)
-            local dur = ent:GetPuppet():SequenceDuration(ent:GetPuppet():LookupSequence("jumpscare"..cuddd))
-            racheljackietien_jumpscare(
-                ply,
-                ent,
-                dur,
-                function()
-                    ent:PillSound('jumpscare'..cuddd)
-                    ent:PillAnim('jumpscare'..cuddd)
-                end
-            )
+                    local puppet = ent:GetPuppet()
+                    if not IsValid(puppet) then return false end
+
+                    local victim = FindJumpscareTarget(ply, ent)
+                    if not victim then return false end
+
+                    local anim = "jumpscare" .. math.random(1, 2)
+                    local seq = puppet:LookupSequence(anim)
+                    if seq < 0 then return false end
+
+                    local dur = puppet:SequenceDuration(seq)
+
+                    local ok = pk_pills.playHNSJumpscare(ply, ent, victim, dur, {
+                        camera    = "ignited_jumpscare_gen",
+                        animation = anim,
+                        sound     = anim,
+                        onStart   = function(v)
+                            return StartJumpscareVisuals(ply, ent, v, dur)
+                        end,
+                    })
+
+                    if ok == false then return false end
+                end,
+            },
+
+            -- Som de glitch na tecla de pulo (so efeito sonoro, a pill nao pula).
+            {
+                id       = "glitch",
+                name     = "Glitch",
+                key      = IN_JUMP,
+                cooldown = 4,
+                anyRound = true,
+                hidden   = true,
+
+                OnUse = function(ply, ent, ab)
+                    AdvancedPillSound({
+                        stringe = "gentoi/anologhorror/ignitedones/glitchout.wav",
+                        pitchPercent = 100,
+                        soundLevel = 57
+                    }, ent)
+                end,
+            },
+        }
+
+        if ConVarNumber("GentoiPills_ignitedbonnie_Rushdown", 1) ~= 0 then
+            table.insert(list, {
+                id       = "rushdown",
+                name     = "Rushdown",
+                icon     = "icons/fasterboost_gent_ignited.png",
+                key      = IN_RELOAD,
+                keyLabel = "R",
+                toggle   = true,
+                duration = math.max(ConVarNumber("GentoiPills_ignitedbonnie_RushdownDuration", 1.5), 0.1),
+                cooldown = ConVarNumber("GentoiPills_ignitedbonnie_RushdownCooldown", 25),
+                color    = Color(255, 60, 60),
+                order    = 20,
+
+                OnUse = function(ply, ent, ab)
+                    if not IsValid(ent) then return false end
+
+                    -- Multiplica a corrida base do Parakeet's pelo tempo da habilidade.
+                    -- Override de admin (speedOverrides) continua tendo prioridade.
+                    local mult = ConVarNumber("GentoiPills_ignitedbonnie_Rushdown_speedmultiplyer", 2.5)
+                    local sp = pk_pills.getMoveSpeed(ent.formTable, ply)
+
+                    ent.rushdownMult = mult
+                    pk_pills.setCostumeMoveSpeed(ent, nil, sp.run * mult, nil, nil)
+                end,
+
+                OnEnd = function(ply, ent, ab, reason)
+                    if not IsValid(ent) then return end
+
+                    ent.rushdownMult = nil
+                    pk_pills.setCostumeMoveSpeed(ent, nil, nil, nil, nil)
+                end,
+            })
         end
-    },
 
-
-    attack2 = {
-        mode = "trigger",
-        func = function(ply, ent)
-
-        end,
-    },
+        return list
+    end,
 
     noragdoll=true,
 
 
     ignitedones_jentoi_pill_init=function(ply,ent, puppet)
-        puppet.IsInJumpscare = 0
-    end,
-
-    reload=function(ply,ent)
+        -- Mantido: a existencia deste campo ativa o Think proprio do addon.
     end,
 
     flashlight = function(ply, ent)
@@ -962,96 +925,35 @@ pk_pills.register('pill_gentoi_ignitedbonnie', {
         
     jump = function(ply, ent) end,
 
-    noodles_ignited_gentoi_keybinds = function(ply,ent,button)
-        if SERVER then
-            if button == KEY_R then
-
-                if not GetConVar("GentoiPills_ignitedbonnie_Rushdown"):GetBool() then return end
-                if ent:GetNWFloat("BonnieRushdown_Gentoi_cooldown") > CurTime() then return end
-                if ent:GetNWFloat("BonnieRushdown_Gentoi_Duration") > CurTime() then return end
-                if ent:GetNWBool("BonnieRushdown_Gentoi_toggle") then return end
-                ent:SetNWFloat("BonnieRushdown_Gentoi_Duration", CurTime()+ GetConVar("GentoiPills_ignitedbonnie_RushdownDuration"):GetFloat())
-            end
-            if button == KEY_SPACE then
-                if ent:GetNWFloat("glitchout_playsfx", 0) > CurTime() then return end
-                ent:SetNWFloat("glitchout_playsfx", CurTime()+4)
-                AdvancedPillSound({
-                    stringe = "gentoi/anologhorror/ignitedones/glitchout.wav",
-                    pitchPercent = 100,
-                    soundLevel = 57
-                }, ent)
-            end
-        end
-    end,
-
-    ignited_stats = {
-        moveSpeed = {
-            walk = 50,
-            run = 540,
-            ducked=20,
-            jumppower = 0,
-        },
-    },
-
     ignitedones_gentoi_think = function(ply, ent)
-        if SERVER then
-            ent:SetNWBool("GentoiPills_ignitedbonnie_Rushdown",GetConVar("GentoiPills_ignitedbonnie_Rushdown"):GetBool())
-            local speed = {
-                ['walk'] = GetConVar("GentoiPills_ignitedbonnie_walkspeed"):GetFloat(),
-                ['run'] = GetConVar("GentoiPills_ignitedbonnie_runspeed"):GetFloat(),
-                ['ducked'] = GetConVar("GentoiPills_ignitedbonnie_crouchspeed"):GetFloat(),
-                ['jumppower'] = GetConVar("GentoiPills_ignitedbonnie_jumppower"):GetFloat(),
-            }
+        if not SERVER then return end
 
-            if ent:GetPuppet():GetSequence() == ent:GetPuppet():LookupSequence("Run") and ent:GetNWFloat("BonnieRushdown_Gentoi_Duration") > CurTime() then
-                local multi = GetConVar("GentoiPills_ignitedbonnie_Rushdown_speedmultiplyer"):GetFloat()
-                speed.run = speed.run * multi
-                ent:GetPuppet():SetPlaybackRate(multi)
-            else
-                ent:GetPuppet():SetPlaybackRate(1)
-            end
+        local puppet = ent:GetPuppet()
+        if not IsValid(puppet) then return end
 
-            if ent:GetNWFloat("BonnieRushdown_Gentoi_Duration") > CurTime() then
-                if not ent:GetNWBool("BonnieRushdown_Gentoi_toggle") then
-                    ent:SetNWBool("BonnieRushdown_Gentoi_toggle", true)
-                end
-            else
-                if ent:GetNWBool("BonnieRushdown_Gentoi_toggle") then
-                    ent:SetNWBool("BonnieRushdown_Gentoi_toggle", false)
-                    
-                    local cooldown = GetConVar("GentoiPills_ignitedbonnie_RushdownCooldown"):GetFloat()
-                    ent:SetNWFloat("BonnieRushdown_Gentoi_cooldown", CurTime()+ cooldown)
-                    ent:SetNWFloat("BonnieRushdown_Gentoi_cooldown_max", cooldown)
-                end
-            end
+        -- Animacao de corrida acelerada durante o Rushdown
+        if ent.rushdownMult and puppet:GetSequence() == puppet:LookupSequence("Run") then
+            puppet:SetPlaybackRate(ent.rushdownMult)
+        else
+            puppet:SetPlaybackRate(1)
+        end
 
-            if IsValid(ply) and IsValid(ent) then
-                ply:SetWalkSpeed(speed.walk)
-                ply:SetRunSpeed(speed.run)
-                ply:SetCrouchedWalkSpeed(speed.ducked)
-                ply:SetJumpPower(speed.jumppower)
-            end
-            if ent.jumpscare_entity then
-                local entity = ent.jumpscare_entity
-                if IsValid(entity) then
+        -- Durante o jumpscare, a vitima (travada pela API) e puxada ate a camera
+        local victim = ent.jumpscare_entity
 
-                    local lengthofentitybody = (entity:EyePos() - entity:GetPos()):Length() /2
+        if IsValid(victim) and victim:Alive() and ent.JuumpscareStart then
+            local cam = puppet:GetAttachment(puppet:LookupAttachment('camera'))
 
-                    local cam = ent:GetPuppet():GetAttachment(ent:GetPuppet():LookupAttachment('camera'))
+            if cam then
+                local mins, maxs = ent:OBBMins(), ent:OBBMaxs()
+                local lengthofentitybody = ((maxs.z - mins.z) / 2) * 4
 
-                    if entity:Health() < 0.1 and entity:IsPlayer() then
-                        ent.jumpscare_entity = nil
-                    else
-                        local mins, maxs = ent:OBBMins(), ent:OBBMaxs()
-                        local lengthofentitybody = ((maxs.z - mins.z)/2) * 4
+                local lerpFactor = math.Clamp((CurTime() - ent.JuumpscareStart) / 0.5, 0, 1)
+                local newAngle = LerpAngle(lerpFactor, ent.entitylastang, cam.Ang)
+                local NewVector = LerpVector(lerpFactor, ent.entitylastpos, cam.Pos - victim:GetUp() * lengthofentitybody)
 
-                        local lerpFactor = math.Clamp((CurTime() - ent.JuumpscareStart) / 0.5, 0, 1)
-                        local newAngle = LerpAngle(lerpFactor, ent.entitylastang, cam.Ang)
-                        local NewVector = LerpVector(lerpFactor, ent.entitylastpos, cam.Pos - entity:GetUp() * lengthofentitybody)
-                        entity:SetPos(NewVector)
-                        entity:SetAngles(newAngle)
-                    end
-                end
+                victim:SetPos(NewVector)
+                victim:SetAngles(newAngle)
             end
         end
     end

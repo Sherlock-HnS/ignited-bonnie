@@ -78,13 +78,9 @@ if SERVER then
     local function CreateAConvVarConstant(VarName, DefaultSetting, Text,min,max)
         CreateConVar(VarName, DefaultSetting, FCVAR_ARCHIVE, Text, min, max)     
     end
-    --rat_gentoi_stats
 
-    CreateAConvVarConstant("GentoiPills_ignitedbonnie_walkspeed",50,"", 0,1e9)  
-    CreateAConvVarConstant("GentoiPills_ignitedbonnie_runspeed",540,"", 0,1e9)  
-    CreateAConvVarConstant("GentoiPills_ignitedbonnie_crouchspeed",20,"", 0,1e9)  
-    CreateAConvVarConstant("GentoiPills_ignitedbonnie_jumppower",0,"", 0,1e9)  
-
+    -- Velocidade (walk/run/crouch/jump) nao tem mais convars: vem do Parakeet's.
+    -- Restam so os ajustes do Rushdown, lidos pela habilidade da pill.
     CreateAConvVarConstant("GentoiPills_ignitedbonnie_Rushdown",1,"", 0,1)  
     CreateAConvVarConstant("GentoiPills_ignitedbonnie_RushdownDuration",1.5,"", 0,1e9) 
     CreateAConvVarConstant("GentoiPills_ignitedbonnie_RushdownCooldown",25,"", 0,1e9) 
@@ -103,11 +99,6 @@ else
                 name = "Gentoi_pills_ignitedbonnie_presets",
 
                 listofdefualtconvars = {
-
-                    "GentoiPills_ignitedbonnie_walkspeed",
-                    "GentoiPills_ignitedbonnie_runspeed",
-                    "GentoiPills_ignitedbonnie_crouchspeed",
-                    "GentoiPills_ignitedbonnie_jumppower",
 
                     "GentoiPills_ignitedbonnie_Rushdown",
                     "GentoiPills_ignitedbonnie_RushdownDuration",
@@ -196,7 +187,10 @@ else
                 if not preset then return end
 
                 for cvar, value in pairs(preset) do
-                    RunConsoleCommand(cvar, tostring(value))
+                    -- ignora convars antigas (ex.: velocidade) de presets ja salvos
+                    if defaultValues[cvar] ~= nil then
+                        RunConsoleCommand(cvar, tostring(value))
+                    end
                 end
             end
 
@@ -326,14 +320,6 @@ else
             end
 
             editButton.DoClick = OpenPresetEditor
-
-            panel:Help("-- Speed --")
-            panel:NumSlider("Walk Speed", "GentoiPills_ignitedbonnie_walkspeed", 1, 200)
-            panel:NumSlider("Run Speed", "GentoiPills_ignitedbonnie_runspeed", 200, 600)
-            panel:NumSlider("Crouch Speed", "GentoiPills_ignitedbonnie_crouchspeed", 1, 200)
-            panel:NumSlider("Jump Power", "GentoiPills_ignitedbonnie_jumppower", 0, 200)
-
-            panel:Help("")
 
             panel:Help("-- Rushdown --")
             panel:CheckBox("Rushdown", "GentoiPills_ignitedbonnie_Rushdown")
