@@ -574,19 +574,9 @@ end
 
 local function FindJumpscareTarget(ply, ent)
     local origin = ent:LocalToWorld(Vector(0, 0, 50))
-    local best, bestDist
+    if not SherlockHNS or not SherlockHNS.FindVictim then return nil end
 
-    for _, v in ipairs(ents.FindInSphere(origin, JUMPSCARE_RADIUS)) do
-        if v ~= ply and v:IsPlayer() and SherlockHNS.CanTarget(v, ply) then
-            local dist = v:GetPos():DistToSqr(origin)
-
-            if not bestDist or dist < bestDist then
-                best, bestDist = v, dist
-            end
-        end
-    end
-
-    return best
+    return SherlockHNS.FindVictim(ply, origin, JUMPSCARE_RADIUS)
 end
 
 local function CreateVictimRagdoll(victim, duration)
